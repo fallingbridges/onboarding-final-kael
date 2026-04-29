@@ -50,7 +50,7 @@ export default function Screen04HowKaelWorks() {
         transition={{ duration: 0.45 }}
         className="mt-2"
       >
-        <Headline text="Kael lives **where** the script lives." size="2xl" />
+        <Headline text="Kael helps you **break free** from the scripts." size="2xl" />
       </motion.div>
 
 
