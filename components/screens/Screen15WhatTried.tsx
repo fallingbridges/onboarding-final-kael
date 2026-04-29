@@ -15,7 +15,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Screen from "@/components/Screen";
-import ColorTile from "@/components/ColorTile";
 import Headline from "@/components/Headline";
 import PrimaryCTA from "@/components/PrimaryCTA";
 import { useFlow } from "@/lib/flow-store";
@@ -27,17 +26,18 @@ interface Opt {
   color: string;
 }
 
+// Ordered shortest → longest so the wrap packs into clean rows
 const OPTIONS: Opt[] = [
-  { key: "therapy", label: "Therapy", Icon: Sofa, color: "#5B7BD9" },
   { key: "books", label: "Books", Icon: BookOpen, color: "#3BA77E" },
+  { key: "apps", label: "Apps", Icon: Smartphone, color: "#3FA3C5" },
+  { key: "therapy", label: "Therapy", Icon: Sofa, color: "#5B7BD9" },
   { key: "courses", label: "Courses", Icon: GraduationCap, color: "#D8A246" },
   { key: "podcasts", label: "Podcasts", Icon: Headphones, color: "#A26AE8" },
-  { key: "apps", label: "Apps", Icon: Smartphone, color: "#3FA3C5" },
-  { key: "journaling", label: "Journaling", Icon: PenLine, color: "#E04877" },
   { key: "meditation", label: "Meditation", Icon: Flower2, color: "#3BA7A7" },
-  { key: "friends", label: "Talking to friends", Icon: MessageCircle, color: "#E87158" },
+  { key: "journaling", label: "Journaling", Icon: PenLine, color: "#E04877" },
   { key: "pushing", label: "Pushing through", Icon: Dumbbell, color: "#C64655" },
-  { key: "nothing", label: "Nothing really", Icon: Circle, color: "#7A6B85" },
+  { key: "friends", label: "Talking to friends", Icon: MessageCircle, color: "#E87158" },
+  { key: "nothing", label: "Nothing really", Icon: Circle, color: "#8B86A1" },
 ];
 
 export default function Screen15WhatTried() {
@@ -58,7 +58,7 @@ export default function Screen15WhatTried() {
         transition={{ duration: 0.4 }}
         className="mt-2"
       >
-        <Headline text="So what have you **tried** so far?" size="lg" />
+        <Headline text="Ways you've tried to **fix** this." size="lg" />
       </motion.div>
 
       <motion.p
@@ -71,23 +71,40 @@ export default function Screen15WhatTried() {
         Pick all that apply.
       </motion.p>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {OPTIONS.map((o, i) => (
-          <motion.div
-            key={o.key}
-            initial={{ opacity: 0, y: 10, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, delay: 0.16 + i * 0.04, ease: "easeOut" }}
-          >
-            <ColorTile
-              Icon={o.Icon}
-              label={o.label}
-              selected={whatTried.includes(o.key)}
+      <div className="mt-7 flex flex-wrap gap-2.5">
+        {OPTIONS.map((o, i) => {
+          const selected = whatTried.includes(o.key);
+          return (
+            <motion.button
+              key={o.key}
+              type="button"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: 0.14 + i * 0.035 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => toggleWhatTried(o.key)}
-              color={o.color}
-            />
-          </motion.div>
-        ))}
+              className="press inline-flex items-center gap-2 rounded-full"
+              style={{
+                padding: "10px 16px",
+                background: selected
+                  ? `linear-gradient(180deg, ${o.color}55 0%, ${o.color}22 100%)`
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${selected ? `${o.color}aa` : "rgba(255,255,255,0.10)"}`,
+                color: selected ? "#FFFFFF" : "rgba(255,255,255,0.78)",
+                fontWeight: selected ? 500 : 400,
+                fontSize: 14.5,
+                boxShadow: selected ? `0 0 18px ${o.color}3a` : "none",
+              }}
+            >
+              <o.Icon
+                size={15}
+                strokeWidth={1.85}
+                color={selected ? "#FFFFFF" : "rgba(255,255,255,0.55)"}
+              />
+              <span>{o.label}</span>
+            </motion.button>
+          );
+        })}
       </div>
     </Screen>
   );
