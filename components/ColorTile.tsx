@@ -10,6 +10,8 @@ interface Props {
   onClick: () => void;
   /** Hex color for the tile gradient. */
   color: string;
+  /** Multi-select cap reached and this tile isn't selected. */
+  capped?: boolean;
 }
 
 /**
@@ -17,7 +19,8 @@ interface Props {
  * white-on-purple checkmark in the top-right corner when selected.
  * Used by Screens 15 (Tried) and 19 (Goals).
  */
-export default function ColorTile({ Icon, label, selected, onClick, color }: Props) {
+export default function ColorTile({ Icon, label, selected, onClick, color, capped }: Props) {
+  const dim = capped && !selected;
   // Lighter and darker variants for the gradient
   const from = mix(color, "#FFFFFF", 0.08);
   const to = mix(color, "#000000", 0.34);
@@ -26,7 +29,8 @@ export default function ColorTile({ Icon, label, selected, onClick, color }: Pro
     <motion.button
       type="button"
       onClick={onClick}
-      whileTap={{ scale: 0.98 }}
+      disabled={dim}
+      whileTap={!dim ? { scale: 0.98 } : undefined}
       transition={{ type: "spring", stiffness: 600, damping: 32 }}
       className="press relative w-full rounded-2xl overflow-hidden text-left block"
       style={{
@@ -37,6 +41,8 @@ export default function ColorTile({ Icon, label, selected, onClick, color }: Pro
           ? `0 0 28px ${color}55, 0 14px 28px -14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16)`
           : `0 12px 24px -14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10)`,
         transform: selected ? "translateY(-1px)" : undefined,
+        opacity: dim ? 0.4 : 1,
+        cursor: dim ? "not-allowed" : "pointer",
       }}
     >
       {/* radial highlight */}

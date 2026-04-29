@@ -41,6 +41,7 @@ export default function Screen19Goals() {
   const toggleGoal = useFlow((s) => s.toggleGoal);
   const next = useFlow((s) => s.next);
 
+  const capped = goals.length >= 3;
   const canContinue = goals.length >= 1;
 
   return (
@@ -58,10 +59,13 @@ export default function Screen19Goals() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="mt-3 text-[15.5px]"
+        className="mt-3 text-[15.5px] flex items-center justify-between"
         style={{ color: "var(--text-mute)" }}
       >
-        Pick anything that fits.
+        <span>Pick up to 3.</span>
+        <span className="tabular-nums text-[13px]" style={{ color: "var(--text-faint)" }}>
+          {goals.length}/3
+        </span>
       </motion.p>
 
       <div className="mt-7 grid grid-cols-2 gap-3">
@@ -78,6 +82,7 @@ export default function Screen19Goals() {
               selected={goals.includes(o.key)}
               onClick={() => toggleGoal(o.key)}
               color={o.color}
+              capped={capped}
             />
           </motion.div>
         ))}

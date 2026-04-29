@@ -117,6 +117,7 @@ export const useFlow = create<FlowState>((set) => ({
     set((s) => {
       const has = s.goals.includes(v);
       if (has) return { goals: s.goals.filter((x) => x !== v) };
+      if (s.goals.length >= 3) return s;
       return { goals: [...s.goals, v] };
     }),
 
