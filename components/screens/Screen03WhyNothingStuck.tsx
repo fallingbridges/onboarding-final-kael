@@ -62,7 +62,7 @@ export default function Screen03WhyNothingStuck() {
         transition={{ duration: 0.4 }}
         className="mt-2"
       >
-        <Headline text="Meet the **scripts** running your life." size="xl" />
+        <Headline text="Meet the **scripts** running your life." size="2xl" />
       </motion.div>
 
       <div className="mt-7 grid grid-cols-2 gap-3">
