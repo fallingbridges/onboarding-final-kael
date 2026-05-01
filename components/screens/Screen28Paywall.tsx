@@ -1,56 +1,56 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import {
+  MessagesSquare,
+  History,
+  Repeat,
+  Lightbulb,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
 import Screen from "@/components/Screen";
 import PrimaryCTA from "@/components/PrimaryCTA";
 import Headline from "@/components/Headline";
-import { useFlow } from "@/lib/flow-store";
-import { STUCK_AREAS } from "@/lib/stuck-areas";
 
-const FEATURES = [
-  "Unlimited coaching sessions",
-  "Memory that holds across time",
-  "Pattern recognition, in real time",
-  "Personalized check-ins between sessions",
-  "Private. Encrypted. Yours.",
+interface Feature {
+  Icon: LucideIcon;
+  label: string;
+}
+
+const FEATURES: Feature[] = [
+  { Icon: MessagesSquare, label: "Unlimited conversations with Kael" },
+  { Icon: History, label: "Memory that connects your story over time" },
+  { Icon: Repeat, label: "Spots the loops you keep repeating" },
+  { Icon: Lightbulb, label: "Gives you experiments and follows up" },
 ];
 
-const GOAL_PHRASES: Record<string, string> = {
-  confidence: "feeling confident again",
-  calm: "a calm mind",
-  habits: "habits that hold",
-  trusting: "trusting yourself",
-  close: "real closeness",
-  cycle: "breaking the cycle",
-  charge: "feeling in control again",
-  alive: "feeling alive again",
-};
-
 export default function Screen28Paywall() {
-  const flow = useFlow();
   const [plan, setPlan] = useState<"yearly" | "monthly">("yearly");
-
-  const area = flow.stuckArea ? STUCK_AREAS[flow.stuckArea]?.labelLower : "";
-  const topGoal = flow.goals[0];
-  const phrase = topGoal ? GOAL_PHRASES[topGoal] ?? "what you came here for" : "what you came here for";
-  const subhead = area
-    ? `Let's work on your ${area}, and get you to ${phrase}.`
-    : `Let's work on the things you named, and get you to ${phrase}.`;
 
   return (
     <Screen
       showBack={false}
+      contentClassName="flex flex-col"
       cta={
-        <div className="flex flex-col gap-3">
-          <PrimaryCTA label="Start 7-day free trial" onClick={() => {/* purchase flow */}} />
-          <p className="text-[11.5px] leading-snug text-center" style={{ color: "var(--text-faint)" }}>
-            Free for 7 days. Then auto-renews at the selected plan unless canceled at least 24 hours before the trial
-            ends. Cancel anytime in Settings.
+        <div className="flex flex-col gap-2.5">
+          <PrimaryCTA label="Start 7-Day Free Trial" onClick={() => {/* purchase flow */}} />
+
+          <p
+            className="text-[12.5px] font-medium leading-snug text-center"
+            style={{ color: "rgba(255,255,255,0.82)" }}
+          >
+            Cancel in seconds. No charge if you don&apos;t love it.
+          </p>
+          <p
+            className="text-[11px] leading-snug text-center"
+            style={{ color: "var(--text-faint)" }}
+          >
+            Free for 7 days. Then auto-renews unless canceled at least 24 hours before the trial ends.
           </p>
           <div className="flex justify-center gap-5 mt-1 mb-0.5">
-            <FootLink>Restore purchase</FootLink>
+            <FootLink>Restore</FootLink>
             <FootLink>Terms</FootLink>
             <FootLink>Privacy</FootLink>
           </div>
@@ -60,21 +60,11 @@ export default function Screen28Paywall() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.45 }}
         className="mt-2"
       >
-        <Headline text="Start your **first** session." size="xl" />
+        <Headline text="Start 7 days **free** with Kael." size="xl" />
       </motion.div>
-
-      <motion.p
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="mt-3 text-[15.5px] leading-snug"
-        style={{ color: "var(--text-mute)" }}
-      >
-        {subhead}
-      </motion.p>
 
       {/* What you get */}
       <div className="mt-7">
@@ -84,57 +74,94 @@ export default function Screen28Paywall() {
         >
           What you get
         </div>
-        <ul className="flex flex-col gap-2.5">
+        <ul className="flex flex-col gap-3">
           {FEATURES.map((f, i) => (
             <motion.li
-              key={f}
+              key={f.label}
               initial={{ opacity: 0, x: -4 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.18 + i * 0.06 }}
-              className="flex gap-2.5 items-start"
+              transition={{ duration: 0.3, delay: 0.2 + i * 0.06 }}
+              className="flex gap-3 items-center"
             >
               <span
-                className="flex items-center justify-center rounded-full shrink-0 mt-0.5"
+                className="flex items-center justify-center rounded-xl shrink-0"
                 style={{
-                  width: 18,
-                  height: 18,
-                  background: "rgba(139, 92, 255, 0.16)",
+                  width: 32,
+                  height: 32,
+                  background: "rgba(139, 92, 255, 0.14)",
+                  border: "1px solid rgba(139, 92, 255, 0.32)",
                   color: "var(--accent-hi)",
                 }}
               >
-                <Check size={11} strokeWidth={3} />
+                <f.Icon size={16} strokeWidth={1.85} />
               </span>
-              <span className="text-[14.5px] leading-snug" style={{ color: "rgba(255,255,255,0.95)" }}>
-                {f}
+              <span className="text-[15px] leading-snug" style={{ color: "rgba(255,255,255,0.95)" }}>
+                {f.label}
               </span>
             </motion.li>
           ))}
         </ul>
       </div>
 
-      {/* Anchor line */}
-      <p className="mt-6 text-[13px]" style={{ color: "var(--text-faint)" }}>
-        A coaching session is $150. Kael is $14.99 a month. Unlimited.
-      </p>
+      {/* Social proof — single review card */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.55 }}
+        className="mt-6 rounded-2xl p-4 flex items-start gap-3"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 8px 18px -12px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex gap-0.5 mb-1.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} size={12} fill="#F5C247" strokeWidth={0} />
+            ))}
+          </div>
+          <p
+            className="text-[14px] leading-snug font-medium"
+            style={{ color: "rgba(255,255,255,0.92)" }}
+          >
+            &ldquo;Six weeks in, I asked for the raise.&rdquo;
+          </p>
+          <div className="mt-1.5 text-[12px]" style={{ color: "var(--text-faint)" }}>
+            <span className="font-semibold" style={{ color: "rgba(255,255,255,0.78)" }}>
+              Marcus T.
+            </span>
+            , 34
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Plan cards */}
-      <div className="mt-4 flex flex-col gap-3">
+      {/* Plan cards — anchored to bottom of content, right above the CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.55 }}
+        className="mt-auto pt-7 flex flex-col gap-2.5"
+      >
         <PlanCard
           selected={plan === "yearly"}
           onClick={() => setPlan("yearly")}
           title="Yearly"
-          price="$99 / year"
-          subline="$8.25 a month, billed annually after trial"
-          badge="SAVE 45%"
+          price="$99/year"
+          priceWas="$180"
+          subline="$8.25/month, billed annually"
+          badge="RECOMMENDED"
+          note="Save 45%"
         />
         <PlanCard
           selected={plan === "monthly"}
           onClick={() => setPlan("monthly")}
           title="Monthly"
-          price="$14.99 / month"
-          subline="Billed monthly after trial"
+          price="$14.99/month"
+          subline="Billed monthly"
         />
-      </div>
+      </motion.div>
     </Screen>
   );
 }
@@ -144,15 +171,19 @@ function PlanCard({
   onClick,
   title,
   price,
+  priceWas,
   subline,
   badge,
+  note,
 }: {
   selected: boolean;
   onClick: () => void;
   title: string;
   price: string;
+  priceWas?: string;
   subline: string;
   badge?: string;
+  note?: string;
 }) {
   return (
     <motion.button
@@ -178,16 +209,47 @@ function PlanCard({
         {selected && <span className="rounded-full" style={{ width: 8, height: 8, background: "#FFFFFF" }} />}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <span className="text-[15.5px] font-semibold" style={{ color: "var(--text)" }}>
-            {title}
-          </span>
-          <span className="text-[15px] font-semibold tabular-nums" style={{ color: "var(--text)" }}>
-            {price}
-          </span>
-        </div>
-        <div className="text-[12.5px] mt-0.5" style={{ color: "var(--text-mute)" }}>
-          {subline}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[15.5px] font-semibold" style={{ color: "var(--text)" }}>
+              {title}
+            </div>
+            <div className="text-[12.5px] mt-0.5" style={{ color: "var(--text-mute)" }}>
+              {subline}
+            </div>
+          </div>
+          <div className="flex flex-col items-end shrink-0">
+            <div className="flex items-baseline gap-1.5">
+              {priceWas && (
+                <span
+                  className="text-[13px] tabular-nums"
+                  style={{
+                    color: "rgba(255,255,255,0.42)",
+                    textDecoration: "line-through",
+                    textDecorationColor: "rgba(255,255,255,0.55)",
+                  }}
+                >
+                  {priceWas}
+                </span>
+              )}
+              <span className="text-[15px] font-semibold tabular-nums" style={{ color: "var(--text)" }}>
+                {price}
+              </span>
+            </div>
+            {note && (
+              <span
+                className="mt-1 rounded-full text-[11px] font-bold tracking-[0.04em] uppercase tabular-nums"
+                style={{
+                  background: "rgba(59, 209, 127, 0.16)",
+                  border: "1px solid rgba(59, 209, 127, 0.45)",
+                  color: "#5BE39A",
+                  padding: "2px 8px",
+                }}
+              >
+                {note}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       {badge && (
