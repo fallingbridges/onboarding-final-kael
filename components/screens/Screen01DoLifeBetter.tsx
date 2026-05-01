@@ -75,7 +75,7 @@ export default function Screen01DoLifeBetter() {
         transition={{ duration: 0.4, delay: 0.05, ease: "easeOut" }}
         className="mt-2"
       >
-        <Headline text="Do life **better** with Kael**.**" size="2xl" className="tracking-[-0.025em] text-center" />
+        <Headline text="Welcome to **Kael**." size="2xl" className="tracking-[-0.025em] text-center" />
       </motion.div>
 
       {/* Subhead */}
@@ -86,7 +86,7 @@ export default function Screen01DoLifeBetter() {
         className="mt-4 text-[16px] leading-[1.45] text-center"
         style={{ color: "var(--text-mute)" }}
       >
-        A coach that sees what&apos;s running you, calls out the loop, and helps you change it.
+        A coach that helps you get unstuck in life.
       </motion.p>
 
       {/* Carousel area */}
