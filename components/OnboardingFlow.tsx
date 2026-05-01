@@ -5,6 +5,7 @@ import { useFlow } from "@/lib/flow-store";
 import { useEffect } from "react";
 
 import Screen01DoLifeBetter from "./screens/Screen01DoLifeBetter";
+import Screen02NotBroken from "./screens/Screen02NotBroken";
 import Screen02SoundFamiliar from "./screens/Screen02SoundFamiliar";
 import Screen03WhyNothingStuck from "./screens/Screen03WhyNothingStuck";
 import Screen04HowKaelWorks from "./screens/Screen04HowKaelWorks";
@@ -35,6 +36,7 @@ import Screen28Paywall from "./screens/Screen28Paywall";
 
 const SCREENS = [
   Screen01DoLifeBetter,
+  Screen02NotBroken,
   Screen02SoundFamiliar,
   Screen03WhyNothingStuck,
   Screen04HowKaelWorks,

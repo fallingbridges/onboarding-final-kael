@@ -3,37 +3,34 @@ import { create } from "zustand";
 /**
  * 0-indexed step ids where back navigation is disabled.
  *
- * Disabled on: Screen 1 (nothing prior), Screen 5 (auth — Apple/Google
- * native flow), Screen 16 (The Read — stale re-stream), Screen 17 (Day 1
- * celebration), Screen 24 (Loading), Screens 25-27 (commitment beats),
- * Screen 28 (Paywall).
+ * After inserting "You're not broken / loop" at index 1, all subsequent
+ * indices shifted by +1.
  *
- * Back is ENABLED on Screens 6-10 (Name through Honesty) so the user
- * can correct prior selections.
+ * Disabled on: Screen 1 (nothing prior), auth (idx 5), The Read (idx 16),
+ * Day 1 (idx 17), Loading (idx 24), commitment beats (idx 25-27), Paywall (idx 28).
+ *
+ * Back is ENABLED on Name through Honesty so the user can correct prior selections.
  */
 export const BACK_DISABLED = new Set<number>([
-  0,    // Screen 1
-  4,    // Screen 5 (auth)
-  15,   // Screen 16 (The Read)
-  16,   // Screen 17 (Day 1)
-  23,   // Screen 24 (Loading)
-  24,   // Screen 25 (Reveal)
-  25,   // Screen 26 (Seal)
-  26,   // Screen 27 (All set)
-  27,   // Screen 28 (Paywall)
+  0,    // Screen 1: Welcome
+  5,    // Screen 6: auth (Make it about you)
+  16,   // Screen 17: The Read
+  17,   // Screen 18: Day 1
+  24,   // Screen 25: Loading
+  25,   // Screen 26: Reveal
+  26,   // Screen 27: Seal
+  27,   // Screen 28: All set
+  28,   // Screen 29: Paywall
 ]);
 
 /**
  * Continuous progress percentage across the form-filling block.
- * Screen 6 (Name, idx 5) through Screen 15 (Tried, idx 14) is the
- * progress range — 10 screens. Returns null on screens that should
- * hide the bar (everything before Name and from The Read onward).
+ * Name (idx 6) through Tried (idx 15) is the progress range — 10 screens.
+ * Returns null on screens that should hide the bar.
  */
 export function progressPercentFor(step: number): number | null {
-  // Visible 5..14 (Name through Tried)
-  if (step < 5 || step > 14) return null;
-  const idx = step - 5; // 0..9
-  // Walk from ~10% to ~95% so it always feels like motion both at start and end
+  if (step < 6 || step > 15) return null;
+  const idx = step - 6; // 0..9
   return Math.round(10 + (idx / 9) * 85);
 }
 
@@ -68,7 +65,7 @@ export interface FlowState {
   goTo: (n: number) => void;
 }
 
-const TOTAL_SCREENS = 28;
+const TOTAL_SCREENS = 29;
 
 export const useFlow = create<FlowState>((set) => ({
   currentStep: 0,
