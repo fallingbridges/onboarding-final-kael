@@ -5,8 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import KaelLogo from "@/components/KaelLogo";
 import PrimaryCTA from "@/components/PrimaryCTA";
 import TypingIndicator from "@/components/TypingIndicator";
+import FirstReadDebug from "@/components/FirstReadDebug";
 import { useFlow } from "@/lib/flow-store";
-import { fakeFetchRead, type ReadMessages } from "@/lib/llm-stub";
+import {
+  fetchFirstRead,
+  FirstReadError,
+  type ReadMessages,
+} from "@/lib/first-read-client";
 import { streamText } from "@/lib/stream-tokens";
 
 type Phase =
@@ -22,6 +27,7 @@ type Phase =
   | "typing-3"
   | "msg-3-intro"
   | "msg-3-bullets"
+  | "msg-3-closing"
   | "ready";
 
 const PRIMING_MS = 2800;
@@ -38,7 +44,20 @@ const TYPING_PHASES = new Set<Phase>([
   "typing-3",
   "msg-3-intro",
   "msg-3-bullets",
+  "msg-3-closing",
 ]);
+
+interface DebugInfo {
+  input: unknown;
+  raw?: string;
+  error?: {
+    message: string;
+    status?: number;
+    detail?: unknown;
+    raw?: unknown;
+    input?: unknown;
+  } | null;
+}
 
 export default function Screen16TheRead() {
   const flow = useFlow();
@@ -46,22 +65,79 @@ export default function Screen16TheRead() {
 
   const [phase, setPhase] = useState<Phase>("priming");
   const [messages, setMessages] = useState<ReadMessages | null>(null);
+  const [error, setError] = useState<FirstReadError | Error | null>(null);
+  const [debug, setDebug] = useState<DebugInfo | null>(null);
   const [m1, setM1] = useState("");
   const [m2, setM2] = useState("");
   const [m3Intro, setM3Intro] = useState("");
   const [m3BulletsRevealed, setM3BulletsRevealed] = useState(0);
 
+  // Snapshot the input we'll send so the debug panel can show it even before the response lands.
+  const sentInputRef = useRef<unknown>(null);
+  if (sentInputRef.current === null) {
+    sentInputRef.current = {
+      name: flow.name,
+      age: flow.age,
+      gender: flow.gender,
+      stuckArea: flow.stuckArea,
+      specificShape: flow.specificShape,
+      customShape: flow.customShape,
+      timeStuck: flow.timeStuck,
+      patterns: flow.patterns,
+      whatTried: flow.whatTried,
+    };
+  }
+
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isDev = process.env.NODE_ENV !== "production";
+    const flagged = new URLSearchParams(window.location.search).get("debug") === "1";
+    setDebugEnabled(isDev || flagged);
+  }, []);
+
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let cancel = false;
-    fakeFetchRead(flow).then((r) => {
-      if (!cancel) setMessages(r);
-    });
+    setError(null);
+    fetchFirstRead(flow)
+      .then((r) => {
+        if (cancel) return;
+        setMessages(r.data);
+        setDebug({ input: r.debug.input, raw: r.debug.raw, error: null });
+      })
+      .catch((e: Error) => {
+        if (cancel) return;
+        const fre = e as FirstReadError;
+        setError(e);
+        setDebug({
+          input: (fre.input as unknown) ?? sentInputRef.current,
+          raw: undefined,
+          error: {
+            message: e.message,
+            status: fre.status,
+            detail: fre.detail,
+            raw: fre.raw,
+          },
+        });
+      });
     return () => {
       cancel = true;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt]);
 
   useEffect(() => {
+    if (!error) return;
+    // Snap to chat surface so the error is visible (skip the priming wait).
+    if (phase === "priming" || phase === "transition") {
+      setPhase("chat-empty");
+    }
+  }, [error, phase]);
+
+  useEffect(() => {
+    if (error) return;
+
     let cancelStream: null | (() => void) = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -115,29 +191,31 @@ export default function Screen16TheRead() {
         setM3BulletsRevealed(i);
         if (i >= messages.shapeBullets.length) {
           clearInterval(id);
-          advance("ready", 350);
+          advance("msg-3-closing", 350);
         }
       }, 220);
       return () => clearInterval(id);
+    } else if (phase === "msg-3-closing") {
+      advance("ready", 700);
     }
 
     return () => {
       if (timer) clearTimeout(timer);
       if (cancelStream) cancelStream();
     };
-  }, [phase, messages]);
+  }, [phase, messages, error]);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [m1, m2, m3Intro, m3BulletsRevealed, phase]);
+  }, [m1, m2, m3Intro, m3BulletsRevealed, phase, error]);
 
-  const showPriming = phase === "priming" || phase === "transition";
-  const showChat = phase !== "priming";
-  const isTyping = TYPING_PHASES.has(phase);
-  const statusText = isTyping ? "typing…" : "online";
+  const showPriming = (phase === "priming" || phase === "transition") && !error;
+  const showChat = phase !== "priming" || error !== null;
+  const isTyping = TYPING_PHASES.has(phase) && !error;
+  const statusText = error ? "error" : isTyping ? "typing…" : "online";
 
   return (
     <motion.section
@@ -164,9 +242,7 @@ export default function Screen16TheRead() {
             className="absolute inset-0 z-20 flex flex-col items-center justify-center"
             style={{ background: "#000", paddingBottom: 60 }}
           >
-            {/* Logo + concentric pulse rings + breathing glow */}
             <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
-              {/* Three offset pulse rings — each expands outward and fades */}
               {[0, 1, 2].map((i) => (
                 <motion.span
                   key={i}
@@ -191,7 +267,6 @@ export default function Screen16TheRead() {
                 />
               ))}
 
-              {/* Breathing radial glow behind the logo */}
               <motion.span
                 className="absolute rounded-full"
                 animate={{
@@ -209,7 +284,6 @@ export default function Screen16TheRead() {
                 aria-hidden
               />
 
-              {/* Logo with subtle breathing scale */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{
@@ -227,7 +301,6 @@ export default function Screen16TheRead() {
               </motion.div>
             </div>
 
-            {/* Type-on text */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: phase === "transition" ? 0 : 1 }}
@@ -256,7 +329,6 @@ export default function Screen16TheRead() {
           className="flex flex-col flex-1"
           style={{ minHeight: 0 }}
         >
-          {/* Chat header */}
           <div
             className="flex items-center gap-3 px-6 pt-2 pb-3"
             style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
@@ -267,7 +339,7 @@ export default function Screen16TheRead() {
                 Kael
               </span>
               <span className="flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--text-faint)" }}>
-                {!isTyping && (
+                {!isTyping && !error && (
                   <motion.span
                     initial={{ scale: 0.6, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -280,12 +352,31 @@ export default function Screen16TheRead() {
                     }}
                   />
                 )}
+                {error && (
+                  <motion.span
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="rounded-full"
+                    style={{
+                      width: 6,
+                      height: 6,
+                      background: "#E04877",
+                      boxShadow: "0 0 6px rgba(224, 72, 119, 0.7)",
+                    }}
+                  />
+                )}
                 <motion.span
                   key={statusText}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.25 }}
-                  style={{ color: isTyping ? "var(--text-faint)" : "rgba(59, 209, 127, 0.95)" }}
+                  style={{
+                    color: error
+                      ? "rgba(224, 72, 119, 0.95)"
+                      : isTyping
+                        ? "var(--text-faint)"
+                        : "rgba(59, 209, 127, 0.95)",
+                  }}
                 >
                   {statusText}
                 </motion.span>
@@ -293,42 +384,51 @@ export default function Screen16TheRead() {
             </div>
           </div>
 
-          {/* Chat scroller — bottom padding leaves room for floating CTA */}
           <div
             ref={scrollerRef}
             className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 flex flex-col gap-4"
             style={{ minHeight: 0, paddingBottom: phase === "ready" ? 120 : 24 }}
           >
-            {phase === "typing-1" && <TypingIndicator />}
+            {error && <ErrorBubble error={error} onRetry={() => setAttempt((a) => a + 1)} />}
 
-            {(phase === "msg-1" ||
-              phase === "pause-1" ||
-              phase === "typing-2" ||
-              phase === "msg-2" ||
-              phase === "pause-2" ||
-              phase === "typing-3" ||
-              phase === "msg-3-intro" ||
-              phase === "msg-3-bullets" ||
-              phase === "ready") && <Bubble>{m1 || messages?.recognition}</Bubble>}
+            {!error && phase === "typing-1" && <TypingIndicator />}
 
-            {phase === "typing-2" && <TypingIndicator />}
+            {!error &&
+              (phase === "msg-1" ||
+                phase === "pause-1" ||
+                phase === "typing-2" ||
+                phase === "msg-2" ||
+                phase === "pause-2" ||
+                phase === "typing-3" ||
+                phase === "msg-3-intro" ||
+                phase === "msg-3-bullets" ||
+                phase === "msg-3-closing" ||
+                phase === "ready") && <Bubble>{m1 || messages?.recognition}</Bubble>}
 
-            {(phase === "msg-2" ||
-              phase === "pause-2" ||
-              phase === "typing-3" ||
-              phase === "msg-3-intro" ||
-              phase === "msg-3-bullets" ||
-              phase === "ready") && <Bubble>{m2 || messages?.hypothesis}</Bubble>}
+            {!error && phase === "typing-2" && <TypingIndicator />}
 
-            {phase === "typing-3" && <TypingIndicator />}
+            {!error &&
+              (phase === "msg-2" ||
+                phase === "pause-2" ||
+                phase === "typing-3" ||
+                phase === "msg-3-intro" ||
+                phase === "msg-3-bullets" ||
+                phase === "msg-3-closing" ||
+                phase === "ready") && <Bubble>{m2 || messages?.hypothesis}</Bubble>}
 
-            {(phase === "msg-3-intro" ||
-              phase === "msg-3-bullets" ||
-              phase === "ready") &&
+            {!error && phase === "typing-3" && <TypingIndicator />}
+
+            {!error &&
+              (phase === "msg-3-intro" ||
+                phase === "msg-3-bullets" ||
+                phase === "msg-3-closing" ||
+                phase === "ready") &&
               messages && (
                 <Bubble>
                   <div>{m3Intro || messages.shapeIntro}</div>
-                  {(phase === "msg-3-bullets" || phase === "ready") && (
+                  {(phase === "msg-3-bullets" ||
+                    phase === "msg-3-closing" ||
+                    phase === "ready") && (
                     <ul className="mt-3 flex flex-col gap-2">
                       {messages.shapeBullets.slice(0, m3BulletsRevealed).map((b, i) => (
                         <motion.li
@@ -348,13 +448,28 @@ export default function Screen16TheRead() {
                       ))}
                     </ul>
                   )}
+                  {(phase === "msg-3-closing" || phase === "ready") &&
+                    messages.closingQuestion && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="mt-4 text-[15px]"
+                        style={{
+                          color: "rgba(255,255,255,0.9)",
+                          fontStyle: "italic",
+                          letterSpacing: "-0.005em",
+                        }}
+                      >
+                        {messages.closingQuestion}
+                      </motion.div>
+                    )}
                 </Bubble>
               )}
           </div>
 
-          {/* Floating sticky CTA */}
           <AnimatePresence>
-            {phase === "ready" && (
+            {phase === "ready" && !error && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -375,6 +490,10 @@ export default function Screen16TheRead() {
             )}
           </AnimatePresence>
         </motion.div>
+      )}
+
+      {debugEnabled && debug && (
+        <FirstReadDebug input={debug.input} raw={debug.raw} error={debug.error ?? null} />
       )}
     </motion.section>
   );
@@ -452,6 +571,80 @@ function Bubble({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+    </motion.div>
+  );
+}
+
+function ErrorBubble({
+  error,
+  onRetry,
+}: {
+  error: FirstReadError | Error;
+  onRetry: () => void;
+}) {
+  const fre = error as FirstReadError;
+  const detail = typeof fre.detail === "string" ? fre.detail : fre.detail ? JSON.stringify(fre.detail, null, 2) : null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl"
+      style={{
+        padding: "14px 16px",
+        background: "rgba(224, 72, 119, 0.10)",
+        border: "1px solid rgba(224, 72, 119, 0.45)",
+        color: "rgba(255, 255, 255, 0.95)",
+        maxWidth: "92%",
+        fontSize: 14,
+        lineHeight: 1.55,
+        alignSelf: "flex-start",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <div style={{ fontWeight: 600, color: "rgba(255, 196, 215, 1)" }}>
+        Couldn't generate The Read.
+      </div>
+      <div style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12.5 }}>
+        {error.message}
+        {fre.status ? `  ·  status ${fre.status}` : ""}
+      </div>
+      {detail && (
+        <pre
+          style={{
+            margin: 0,
+            padding: 8,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            fontFamily: "ui-monospace, Menlo, monospace",
+            fontSize: 11.5,
+            maxHeight: 200,
+            overflow: "auto",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {detail}
+        </pre>
+      )}
+      <button
+        type="button"
+        onClick={onRetry}
+        className="press self-start rounded-full"
+        style={{
+          padding: "8px 14px",
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          color: "rgba(255,255,255,0.95)",
+          fontSize: 13,
+          fontWeight: 500,
+        }}
+      >
+        Retry
+      </button>
     </motion.div>
   );
 }
