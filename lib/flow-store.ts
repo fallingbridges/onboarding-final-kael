@@ -20,7 +20,9 @@ export const BACK_DISABLED = new Set<number>([
   25,   // Screen 26: Reveal
   26,   // Screen 27: Seal
   27,   // Screen 28: All set
-  28,   // Screen 29: Paywall
+  28,   // Screen 29: Free trial offer
+  29,   // Screen 30: Trial reminder
+  30,   // Screen 31: Paywall
 ]);
 
 /**
@@ -65,7 +67,7 @@ export interface FlowState {
   goTo: (n: number) => void;
 }
 
-const TOTAL_SCREENS = 29;
+const TOTAL_SCREENS = 31;
 
 export const useFlow = create<FlowState>((set) => ({
   currentStep: 0,

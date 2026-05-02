@@ -32,6 +32,8 @@ import Screen24Loading from "./screens/Screen24Loading";
 import Screen25Reveal from "./screens/Screen25Reveal";
 import Screen26SealIt from "./screens/Screen26SealIt";
 import Screen27AllSet from "./screens/Screen27AllSet";
+import Screen28FreeTrial from "./screens/Screen28FreeTrial";
+import Screen29TrialReminder from "./screens/Screen29TrialReminder";
 import Screen28Paywall from "./screens/Screen28Paywall";
 
 const SCREENS = [
@@ -63,6 +65,8 @@ const SCREENS = [
   Screen25Reveal,
   Screen26SealIt,
   Screen27AllSet,
+  Screen28FreeTrial,
+  Screen29TrialReminder,
   Screen28Paywall,
 ];
 
