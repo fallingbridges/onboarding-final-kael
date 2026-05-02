@@ -11,7 +11,27 @@ import {
   fetchFirstRead,
   FirstReadError,
   type ReadMessages,
+  type FirstReadResult,
 } from "@/lib/first-read-client";
+
+// Dummy fallback used when the real /api/first-read fails (e.g. no
+// OpenRouter key configured). Lets the Read screen always render.
+function dummyRead(state: { name?: string }): FirstReadResult {
+  const name = state.name?.trim() || "you";
+  const data: ReadMessages = {
+    recognition: `Okay, ${name}. I hear you. The thing you described — it isn't a one-off. It's the same loop showing up in different costumes, at different times, and you've gotten used to it being there.`,
+    hypothesis: `Here's a hypothesis, not a verdict: the things you've tried haven't failed because you didn't try hard enough. They failed because they were aimed at the surface, and the loop runs underneath.`,
+    shapeIntro: "Here's what we'll try to do together:",
+    shapeBullets: [
+      "Catch the loop in real time, not in hindsight.",
+      "Look at what's actually running underneath it.",
+      "Build something steadier than the old move.",
+      "Hold you to it across weeks, not just sessions.",
+    ],
+    closingQuestion: "Does any of that land for you?",
+  };
+  return { data, debug: { input: state, raw: "[dummy fallback]" } };
+}
 import { streamText } from "@/lib/stream-tokens";
 
 type Phase =
@@ -108,13 +128,17 @@ export default function Screen16TheRead() {
       })
       .catch((e: Error) => {
         if (cancel) return;
+        // Real call failed (most likely missing OPENROUTER_API_KEY in dev).
+        // Fall back to a dummy read so the screen never gets stuck. Surface
+        // the underlying error in the debug panel for diagnostics.
+        const fallback = dummyRead({ name: flow.name });
+        setMessages(fallback.data);
         const fre = e as FirstReadError;
-        setError(e);
         setDebug({
           input: (fre.input as unknown) ?? sentInputRef.current,
-          raw: undefined,
+          raw: fallback.debug.raw,
           error: {
-            message: e.message,
+            message: `[fallback] ${e.message}`,
             status: fre.status,
             detail: fre.detail,
             raw: fre.raw,
