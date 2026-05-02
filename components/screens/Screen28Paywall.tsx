@@ -53,9 +53,9 @@ export default function Screen28Paywall() {
         />
       </motion.div>
 
-      <div className="px-6 pb-6">
+      <div className="px-6 pb-6 pt-3">
         {/* Features with golden crowns */}
-        <ul className="mt-2 flex flex-col gap-3">
+        <ul className="flex flex-col gap-3">
           {FEATURES.map((f, i) => (
             <motion.li
               key={f}
