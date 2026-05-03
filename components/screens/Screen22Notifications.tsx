@@ -21,7 +21,7 @@ export default function Screen22Notifications() {
         transition={{ duration: 0.4 }}
         className="mt-2"
       >
-        <Headline text="Kael follows up so **you do too**." size="xl" />
+        <Headline text="Kael checks in. So you don't **drift**." size="xl" />
       </motion.div>
 
       <motion.p

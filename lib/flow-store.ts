@@ -48,6 +48,7 @@ export interface FlowState {
   customShape: string;
   timeStuck: string;
   patterns: string[];       // multi-select, max 3
+  customPattern: string;    // free-text addition to patterns, optional
   whatTried: string[];      // multi-select
   goals: string[];          // multi-select, max 3
 
@@ -59,6 +60,7 @@ export interface FlowState {
   setCustomShape: (v: string) => void;
   setTimeStuck: (v: string) => void;
   togglePattern: (v: string) => void;
+  setCustomPattern: (v: string) => void;
   toggleWhatTried: (v: string) => void;
   toggleGoal: (v: string) => void;
 
@@ -81,6 +83,7 @@ export const useFlow = create<FlowState>((set) => ({
   customShape: "",
   timeStuck: "",
   patterns: [],
+  customPattern: "",
   whatTried: [],
   goals: [],
 
@@ -99,6 +102,8 @@ export const useFlow = create<FlowState>((set) => ({
       if (s.patterns.length >= 3) return s;
       return { patterns: [...s.patterns, v] };
     }),
+
+  setCustomPattern: (v) => set({ customPattern: v }),
 
   toggleWhatTried: (v) =>
     set((s) => {

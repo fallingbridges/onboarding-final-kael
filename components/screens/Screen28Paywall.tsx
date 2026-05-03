@@ -1,15 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Crown } from "lucide-react";
+import { Brain, FlaskConical, Infinity as InfinityIcon, Repeat } from "lucide-react";
 import { useState } from "react";
 import PrimaryCTA from "@/components/PrimaryCTA";
 
 const FEATURES = [
-  "Unlimited conversations with Kael",
-  "Memory that connects your story over time",
-  "Spots the loops you keep repeating",
-  "Gives you experiments and follows up",
+  { text: "Unlimited conversations with Kael", Icon: InfinityIcon },
+  { text: "Memory that connects your story over time", Icon: Brain },
+  { text: "Spots the loops you keep repeating", Icon: Repeat },
+  { text: "Gives you experiments and follows up", Icon: FlaskConical },
 ];
 
 const GOLD = "#F5C247";
@@ -37,7 +37,7 @@ export default function Screen28Paywall() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/goodlife.png"
+          src="/goodlife-v2.png"
           alt="A morning desk scene — phone glowing purple in hand, coffee, fresh flowers, journal, and running shoes"
           className="block w-full h-full object-cover"
         />
@@ -54,26 +54,25 @@ export default function Screen28Paywall() {
       </motion.div>
 
       <div className="px-6 pb-6 pt-3">
-        {/* Features with golden crowns */}
+        {/* Features with golden icons */}
         <ul className="flex flex-col gap-3">
-          {FEATURES.map((f, i) => (
+          {FEATURES.map(({ text, Icon }, i) => (
             <motion.li
-              key={f}
+              key={text}
               initial={{ opacity: 0, x: -4 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.32, delay: 0.18 + i * 0.07 }}
               className="flex gap-3 items-center"
             >
-              <Crown
+              <Icon
                 size={20}
                 strokeWidth={2}
-                fill={GOLD}
                 color={GOLD}
                 style={{ filter: "drop-shadow(0 0 6px rgba(245, 194, 71, 0.4))" }}
                 className="shrink-0"
               />
               <span className="text-[15.5px] leading-snug" style={{ color: "rgba(255,255,255,0.95)" }}>
-                {f}
+                {text}
               </span>
             </motion.li>
           ))}

@@ -27,10 +27,12 @@ const OPTIONS: Opt[] = [
 export default function Screen14Patterns() {
   const patterns = useFlow((s) => s.patterns);
   const togglePattern = useFlow((s) => s.togglePattern);
+  const customPattern = useFlow((s) => s.customPattern);
+  const setCustomPattern = useFlow((s) => s.setCustomPattern);
   const next = useFlow((s) => s.next);
 
   const capped = patterns.length >= 3;
-  const canContinue = patterns.length >= 1;
+  const canContinue = patterns.length >= 1 || customPattern.trim().length > 0;
 
   return (
     <Screen
@@ -100,6 +102,28 @@ export default function Screen14Patterns() {
           );
         })}
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.14 + OPTIONS.length * 0.035 }}
+        className="mt-4 mb-4"
+      >
+        <textarea
+          value={customPattern}
+          onChange={(e) => setCustomPattern(e.target.value)}
+          placeholder="Or in your own words..."
+          rows={2}
+          className="w-full rounded-2xl text-[15px] outline-none resize-none"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            padding: "14px 16px",
+            color: "var(--text)",
+            lineHeight: 1.5,
+          }}
+        />
+      </motion.div>
     </Screen>
   );
 }
