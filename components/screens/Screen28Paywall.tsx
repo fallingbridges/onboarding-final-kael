@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Brain, FlaskConical, Infinity as InfinityIcon, Repeat } from "lucide-react";
 import { useState } from "react";
 import PrimaryCTA from "@/components/PrimaryCTA";
+import Headline from "@/components/Headline";
+import { useFlow } from "@/lib/flow-store";
 
 const FEATURES = [
   { text: "Unlimited conversations with Kael", Icon: InfinityIcon },
@@ -16,6 +18,8 @@ const GOLD = "#F5C247";
 
 export default function Screen28Paywall() {
   const [plan, setPlan] = useState<"yearly" | "monthly">("yearly");
+  const name = useFlow((s) => s.name);
+  const display = name?.trim() || "you";
 
   return (
     <motion.section
@@ -27,35 +31,18 @@ export default function Screen28Paywall() {
       className="relative flex flex-col"
       style={{ minHeight: "100dvh" }}
     >
-      {/* Hero image — flush against the very top */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="relative w-full overflow-hidden"
-        style={{ height: 240 }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/goodlife-v2.png"
-          alt="A morning desk scene — phone glowing purple in hand, coffee, fresh flowers, journal, and running shoes"
-          className="block w-full h-full object-cover"
-        />
-        {/* fade-to-bg at bottom */}
-        <span
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 pointer-events-none"
-          style={{
-            height: 96,
-            background:
-              "linear-gradient(180deg, rgba(14,8,32,0) 0%, rgba(14,8,32,0.7) 65%, var(--bg-from) 100%)",
-          }}
-        />
-      </motion.div>
+      <div className="px-6 pb-6 pt-12">
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Headline text={`Let's make the commitment **real**, ${display}.`} size="xl" />
+        </motion.div>
 
-      <div className="px-6 pb-6 pt-3">
         {/* Features with golden icons */}
-        <ul className="flex flex-col gap-3">
+        <ul className="mt-8 flex flex-col gap-3">
           {FEATURES.map(({ text, Icon }, i) => (
             <motion.li
               key={text}
